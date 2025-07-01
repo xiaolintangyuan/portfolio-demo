@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PassGen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36D399',
+                        danger: '#F87272',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .transition-custom {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .password-strength-bar {
+                height: 4px;
+                transition: width 0.5s ease;
+            }
+        }
+    </style>
+</head>
+
+<body class="font-inter bg-gradient-to-br from-light to-gray-100 min-h-screen flex flex-col">
+    <!-- Header Section -->
+    <header class="bg-white shadow-md sticky top-0 z-10 transition-all duration-300" id="header">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-key text-primary text-2xl"></i>
+                <h1 class="text-xl md:text-2xl font-bold text-dark">PassGen</h1>
+                <p class="text-gray-500">Simple Password Generator</p>
+            </div>
+            <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 transition-all">
+                <i class="fa fa-moon-o text-dark"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8 md:py-12">
+        <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 transition-custom hover:shadow-xl">
+            <!-- Password Display -->
+            <div class="mb-8">
+                <div class="relative">
+                    <input type="text" id="generated-password"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 pr-12 text-lg font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-custom"
+                        placeholder="Generated Password" readonly>
+                    <button id="copy-btn"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 bg-primary/10 hover:bg-primary/20 text-primary p-2 rounded-lg transition-custom">
+                        <i class="fa fa-clipboard"></i>
+                    </button>
+                </div>
+                <div class="mt-2 flex items-center">
+                    <div id="strength-meter" class="w-full bg-gray-200 rounded-full overflow-hidden">
+                        <div id="strength-bar" class="password-strength-bar bg-secondary w-0 rounded-full"></div>
+                    </div>
+                    <span id="strength-text" class="ml-3 text-sm font-medium text-gray-500">Strength: None</span>
+                </div>
+            </div>
+
+            <!-- Options Section -->
+            <div class="space-y-6">
+                <!-- Length Slider -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label for="length" class="text-dark font-medium">Password Length</label>
+                        <span id="length-value"
+                            class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">12</span>
+                    </div>
+                    <input type="range" id="length" min="8" max="32" value="12"
+                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary">
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>8</span>
+                        <span>20</span>
+                        <span>32</span>
+                    </div>
+                </div>
+
+                <!-- Character Options -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-semibold text-dark">Character Types</h2>
+
+                    <!-- Uppercase Letters -->
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                <i class="fa fa-font"></i>
+                            </div>
+                            <label for="uppercase" class="font-medium text-dark">Uppercase Letters</label>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="uppercase" class="sr-only peer" checked>
+                            <div
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Lowercase Letters -->
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                <i class="fa fa-font text-xs"></i>
+                            </div>
+                            <label for="lowercase" class="font-medium text-dark">Lowercase Letters</label>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="lowercase" class="sr-only peer" checked>
+                            <div
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Numbers -->
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                <i class="fa fa-hashtag"></i>
+                            </div>
+                            <label for="numbers" class="font-medium text-dark">Numbers</label>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="numbers" class="sr-only peer" checked>
+                            <div
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Symbols -->
+                    <div class="space-y-3 p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                    <i class="fa fa-exclamation"></i>
+                                </div>
+                                <label class="font-medium text-dark">Symbols</label>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="symbols-toggle" class="sr-only peer" checked>
+                                <div
+                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Symbol Selection Grid -->
+                        <div id="symbols-container"
+                            class="grid grid-cols-8 gap-2 p-3 bg-white rounded-lg border border-gray-100">
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="!">!</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="@">@</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="#">#</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="$">$</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="%">%</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="^">^</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="&amp;">&amp;</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="*">*</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="(">(</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol=")">)</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="-">-</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="_">_</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="+">+</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="=">=</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="[">[</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="]">]</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="{">{</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="}">}</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="|">|</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol=":">:</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol=";">;</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="&lt;">&lt;</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol=">">&gt;</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol=",">,</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol=".">.</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="?">?</button>
+                            <button
+                                class="symbol-btn bg-gray-100 hover:bg-primary hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-custom"
+                                data-symbol="/">/</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generate Button -->
+                <button id="generate-btn"
+                    class="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-4 rounded-lg transition-custom transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2 shadow-lg shadow-primary/20">
+                    <i class="fa fa-refresh"></i>
+                    <span>Generate Password</span>
+                </button>
+            </div>
+        </div>
+
+
+    </main>
+    <!-- Notification Toast -->
+    <div id="toast"
+        class="fixed top-4 right-4 bg-dark text-white p-4 rounded-lg shadow-lg transform translate-x-full transition-all duration-300 flex items-center space-x-3">
+        <i class="fa fa-check-circle text-secondary"></i>
+        <span id="toast-message">Password copied to clipboard!</span>
+    </div>
+
+    <script>
+        // DOM Elements
+        const lengthSlider = document.getElementById('length');
+        const lengthValue = document.getElementById('length-value');
+        const uppercaseCheckbox = document.getElementById('uppercase');
+        const lowercaseCheckbox = document.getElementById('lowercase');
+        const numbersCheckbox = document.getElementById('numbers');
+        const symbolsToggle = document.getElementById('symbols-toggle');
+        const symbolsContainer = document.getElementById('symbols-container');
+        const symbolButtons = document.querySelectorAll('.symbol-btn');
+        const generateBtn = document.getElementById('generate-btn');
+        const generatedPassword = document.getElementById('generated-password');
+        const copyBtn = document.getElementById('copy-btn');
+        const strengthBar = document.getElementById('strength-bar');
+        const strengthText = document.getElementById('strength-text');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        const themeToggle = document.getElementById('theme-toggle');
+        const header = document.getElementById('header');
+
+        // Character sets
+        const UPPERCASE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const LOWERCASE_CHARS = 'abcdefghijklmnopqrstuvwxyz';
+        const NUMBER_CHARS = '0123456789';
+        let selectedSymbols = '!@#$%^&*()-_=+[]{}|;:,.<>?/'; // Default selected symbols
+
+        // Initialize selected symbols
+        symbolButtons.forEach(btn => {
+            if (selectedSymbols.includes(btn.dataset.symbol)) {
+                btn.classList.add('bg-primary', 'text-white');
+                btn.classList.remove('bg-gray-100', 'hover:bg-primary');
+            }
+
+            btn.addEventListener('click', () => {
+                const symbol = btn.dataset.symbol;
+                if (btn.classList.contains('bg-primary')) {
+                    btn.classList.remove('bg-primary', 'text-white');
+                    btn.classList.add('bg-gray-100', 'hover:bg-primary');
+                    selectedSymbols = selectedSymbols.replace(symbol, '');
+                } else {
+                    btn.classList.add('bg-primary', 'text-white');
+                    btn.classList.remove('bg-gray-100', 'hover:bg-primary');
+                    selectedSymbols += symbol;
+                }
+                // Regenerate password if symbols toggle is enabled
+                if (symbolsToggle.checked) {
+                    generatePassword();
+                }
+            });
+        });
+
+        // Toggle symbols container visibility
+        symbolsToggle.addEventListener('change', () => {
+            if (symbolsToggle.checked) {
+                symbolsContainer.classList.remove('hidden');
+                generatePassword();
+            } else {
+                symbolsContainer.classList.add('hidden');
+                generatePassword();
+            }
+        });
+
+        // Update length value display
+        lengthSlider.addEventListener('input', () => {
+            lengthValue.textContent = lengthSlider.value;
+            generatePassword();
+        });
+
+        // Generate password when checkboxes change
+        [uppercaseCheckbox, lowercaseCheckbox, numbersCheckbox].forEach(checkbox => {
+            checkbox.addEventListener('change', generatePassword);
+        });
+
+        // Generate password button click
+        generateBtn.addEventListener('click', () => {
+            generatePassword();
+            // Add animation effect
+            generateBtn.classList.add('animate-pulse');
+            setTimeout(() => {
+                generateBtn.classList.remove('animate-pulse');
+            }, 500);
+        });
+
+        // Copy to clipboard
+        copyBtn.addEventListener('click', () => {
+            if (generatedPassword.value) {
+                generatedPassword.select();
+                document.execCommand('copy');
+
+                // Show toast notification
+                showToast('Password copied to clipboard!');
+
+                // Add animation effect to copy button
+                copyBtn.classList.add('animate-ping');
+                setTimeout(() => {
+                    copyBtn.classList.remove('animate-ping');
+                }, 500);
+            }
+        });
+
+        // Show toast notification
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toast.classList.remove('translate-x-full');
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+
+        // Generate password function
+        function generatePassword() {
+            let charset = '';
+            let password = '';
+
+            // Build character set based on options
+            if (uppercaseCheckbox.checked) charset += UPPERCASE_CHARS;
+            if (lowercaseCheckbox.checked) charset += LOWERCASE_CHARS;
+            if (numbersCheckbox.checked) charset += NUMBER_CHARS;
+            if (symbolsToggle.checked && selectedSymbols) charset += selectedSymbols;
+
+            // Validate at least one option is selected
+            if (!charset) {
+                generatedPassword.value = 'Please select at least one character type';
+                updatePasswordStrength(0);
+                return;
+            }
+
+            // Generate password
+            const length = parseInt(lengthSlider.value);
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(Math.random() * charset.length);
+                password += charset.charAt(randomIndex);
+            }
+
+            generatedPassword.value = password;
+            updatePasswordStrength(password);
+        }
+
+        // Update password strength indicator
+        function updatePasswordStrength(password) {
+            if (!password || password === 'Please select at least one character type') {
+                strengthBar.style.width = '0%';
+                strengthBar.className = 'password-strength-bar bg-secondary w-0 rounded-full';
+                strengthText.textContent = 'Strength: None';
+                strengthText.className = 'ml-3 text-sm font-medium text-gray-500';
+                return;
+            }
+
+            // Calculate password strength (simplified version)
+            let score = 0;
+
+            // Length bonus
+            score += Math.min(password.length * 4, 40);
+
+            // Character variety
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSymbol = /[^A-Za-z0-9]/.test(password);
+
+            const charTypeCount = [hasUpper, hasLower, hasNumber, hasSymbol].filter(Boolean).length;
+            score += charTypeCount * 10;
+
+            // Bonus for balanced character types
+            if (charTypeCount >= 3) {
+                score += 20;
+            }
+
+            // Check for repeating characters
+            const repeating = (password.match(/(.)\1{2,}/g) || []).length;
+            score -= repeating * 10;
+
+            // Cap score at 100
+            score = Math.min(score, 100);
+
+            // Update UI based on score
+            let strengthClass, strengthLabel;
+            if (score < 40) {
+                strengthClass = 'bg-danger';
+                strengthLabel = 'Weak';
+                strengthText.className = 'ml-3 text-sm font-medium text-danger';
+            } else if (score < 70) {
+                strengthClass = 'bg-yellow-500';
+                strengthLabel = 'Medium';
+                strengthText.className = 'ml-3 text-sm font-medium text-yellow-500';
+            } else {
+                strengthClass = 'bg-secondary';
+                strengthLabel = 'Strong';
+                strengthText.className = 'ml-3 text-sm font-medium text-secondary';
+            }
+
+            strengthBar.style.width = `${score}%`;
+            strengthBar.className = `password-strength-bar ${strengthClass} w-[${score}%] rounded-full`;
+            strengthText.textContent = `Strength: ${strengthLabel}`;
+        }
+
+        // Theme toggle functionality (not fully implemented)
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const icon = themeToggle.querySelector('i');
+            if (icon.classList.contains('fa-moon-o')) {
+                icon.classList.remove('fa-moon-o');
+                icon.classList.add('fa-sun-o');
+            } else {
+                icon.classList.remove('fa-sun-o');
+                icon.classList.add('fa-moon-o');
+            }
+            // Show toast notification
+            showToast('Theme toggle not fully implemented in this demo');
+        });
+
+        // Scroll effect for header
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 10) {
+                header.classList.add('py-2');
+                header.classList.remove('py-4');
+            } else {
+                header.classList.add('py-4');
+                header.classList.remove('py-2');
+            }
+        });
+
+        // Initialize with a generated password
+        generatePassword();
+    </script>
+</body>
+
+</html>
