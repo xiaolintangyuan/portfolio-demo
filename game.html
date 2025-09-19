@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client-side AI Chat</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .chat-container {
+            overflow: hidden;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .user-message {
+            background-color: #007bff;
+            margin-left: 20%;
+        }
+
+        .assistant-message {
+            background-color: #333;
+            margin-right: 20%;
+        }
+
+        .input-group textarea {
+            resize: none;
+            overflow: hidden;
+        }
+
+        pre {
+            background-color: #2d2d2d;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        code {
+            background-color: #2d2d2d;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="container mt-4">
+        <h1 class="text-center mb-4">AI Chat Interface</h1>
+
+        <!-- Setup Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Setup</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="apiKey" class="form-label">Open Router API Key</label>
+                    <input type="password" class="form-control" id="apiKey" v-model="apiKey"
+                        placeholder="Enter your API key">
+                </div>
+                <div class="mb-3">
+                    <label for="model" class="form-label">Model Reference</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="model" v-model="model" list="availableModels"
+                            placeholder="e.g. deepseek/deepseek-r1-distill-llama-70b:free" />
+                        <datalist id="availableModels">
+                            <option v-for="modelOption in availableModels" :value="modelOption" :key="modelOption">
+                        </datalist>
+                        <button class="btn btn-primary text-white" @click="setFreeModel()">
+                            Free
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <!-- Options -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="showThinking"
+                                    v-model="showThinking">
+                                <label class="form-check-label" for="showThinking">
+                                    Show Thinking
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="temperature" class="form-label">Temperature</label>
+                            <input type="number" class="form-control" id="temperature" v-model.number="temperature"
+                                min="0" max="2" step="0.1">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="assistantNameInput" class="form-label">Assistant Name</label>
+                            <input type="text" class="form-control" id="assistantNameInput" v-model="assistantName"
+                                placeholder="Assistant">
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="instructions" class="form-label">Instructions (System Prompt)</label>
+                    <textarea class="form-control" id="instructions" v-model="instructions" rows="3"
+                        placeholder="Enter system instructions"></textarea>
+                </div>
+                <div class="mb-3">
+                    <div class="float-end">
+                        <button class="btn btn-primary text-white" @click="saveSetup()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversation Section -->
+        <div class="chat-container" id="conversation">
+            <div v-for="(message, index) in messages" :key="index"
+                :class="['message', message.role === 'user' ? 'user-message' : 'assistant-message']">
+                <div class="mb-2">
+                    <strong v-text="getRoleLabel(message.role)"></strong>
+                </div>
+                <!-- Add caret to show/hide the reasoning -->
+                <div v-if="message.reasoning && message.reasoning != ''" class="mb-2">
+                    <button class="btn btn-sm btn-outline-secondary text-white"
+                        @click="message.showReasoning = !message.showReasoning">
+                        <span v-if="message.showReasoning">▼</span>
+                        <span v-else>▶</span>
+                        Thinking
+                    </button>
+                </div>
+                <div v-if="message.reasoning && message.reasoning != '' && message.showReasoning"
+                    class="alert alert-success mb-2">
+                    <div class="fw-bold fst-italic">Thinking:</div>
+                    <div v-html="message.reasoning"></div>
+                </div>
+                <div class="mb-2" v-html="message.content"></div>
+                <div class="mb-2">
+                    <div class="float-end" v-if="message.tokens && !isNaN(message.tokens) && message.tokens > 0">
+                        <span class="text-muted small" v-text="getTokensText(message.tokens)"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversation Input Section -->
+        <div class="mb-3">
+            <textarea class="form-control mb-3" v-model="userInput" @input="autoExpand"
+                @keydown.enter.exact.prevent="sendMessage" placeholder="Type your message..." rows="1"></textarea>
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-danger text-white" @click="clearMessages()">Clear Chat</button>
+                <button class="btn btn-primary" @click="sendMessage" :disabled="!canSend">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script>
+        const { createApp } = Vue;
+        const availableModels = [
+            "deepseek/deepseek-chat-v3.1:free",
+            "deepseek/deepseek-chat-v3:free",
+            "deepseek/deepseek-r1-0528-qwen3-8b:free",
+            "deepseek/deepseek-r1-0528:free",
+            "deepcogito/cogito-v2-preview-deepseek-671b:free",
+            "z-ai/glm-4.5-air:free",
+            "qwen/qwen3-coder:free",
+            "qwen/qwen3-4b:free",
+            "qwen/qwen3-30b-a3b:free",
+            "qwen/qwen3-8b:free",
+            "qwen/qwen3-14b:free",
+            "openai/gpt-oss-120b:free",
+            "openai/gpt-oss-20b:free",
+            "meta-llama/llama-3.3-8b-instruct:free",
+            "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+            "tencent/hunyuan-a13b-instruct:free",
+            "tngtech/deepseek-r1t2-chimera:free",
+            "mistralai/mistral-small-3.2-24b-instruct:free",
+            "mistralai/devstral-small-2505:free",
+            "google/gemma-3n-e2b-it:free",
+            "google/gemma-3n-e4b-it:free",
+            "moonshotai/kimi-k2:free",
+            "moonshotai/kimi-dev-72b:free",
+            "nvidia/nemotron-nano-9b-v2:free"
+        ];
+
+        const getBaseMessageTemplate = () => {
+            return {
+                role: '',
+                content: '',
+                reasoning: '',
+                showReasoning: false,
+                tokens: 0
+            };
+        }
+
+        let app = createApp({
+            data() {
+                return {
+                    assistantName: 'Assistant',
+                    apiKey: '',
+                    model: '',
+                    instructions: 'You are a helpful assistant for the user.',
+                    messages: [],
+                    userInput: '',
+                    availableModels: availableModels,
+                    temperature: 0.7,
+                    showThinking: true
+                };
+            },
+            computed: {
+                canSend() {
+                    return this.apiKey && this.model && this.userInput.trim();
+                }
+            },
+            methods: {
+                autoExpand(event) {
+                    const textarea = event.target;
+                    textarea.style.height = 'auto';
+                    textarea.style.height = textarea.scrollHeight + 'px';
+                },
+                getRoleLabel(role) {
+                    return role === 'user' ? 'You:' : `${this.assistantName}:`;
+                },
+                getTokensText(tokens) {
+                    return `${tokens} tokens`;
+                },
+                clearMessages() {
+                    this.messages = [];
+                },
+                async sendMessage() {
+                    if (!this.canSend) return;
+
+                    const userMessage = getBaseMessageTemplate();
+                    userMessage.role = 'user';
+                    userMessage.content = this.userInput.trim();
+                    this.messages.push(userMessage);
+
+                    const assistantMessage = getBaseMessageTemplate();
+                    assistantMessage.role = 'assistant';
+                    assistantMessage.showReasoning = this.showThinking;
+                    this.messages.push(assistantMessage);
+                    this.userInput = '';
+
+                    try {
+                        await this.callOpenRouterAPI(assistantMessage);
+                        this.$nextTick(() => {
+                            this.scrollToBottom();
+                        });
+                    } catch (error) {
+                        console.error('Error:', error);
+                        assistantMessage.content = 'Sorry, there was an error processing your request.';
+                    }
+                },
+                async callOpenRouterAPI(message) {
+                    const url = 'https://openrouter.ai/api/v1/chat/completions';
+                    const headers = {
+                        'Authorization': `Bearer ${this.apiKey}`,
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': 'https://xiaolintangyuan.github.io/portfolio-demo/game',
+                        'X-Title': `xiaolin's Github Pages`
+                    };
+                    const body = {
+                        model: this.model,
+                        messages: [
+                            { role: 'system', content: this.instructions + '\n<IMPORTANT>RETURN OUTPUT IN HTML TAGS. ENCAPSUALTE ALL CODE IN <code> TAG. DO NOT USE MARKDOWN.</IMPORTANT>' },
+                            ...this.messages.slice(-11, -1) // Keep last 10 messages for context, exclude the current assistant message
+                        ],
+                        stream: true,
+                        temperature: this.temperature
+                    };
+
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(body)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API request failed: ${response.status}`);
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split('\n');
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                const data = line.slice(6);
+                                if (data === '[DONE]') { return; }
+                                try {
+                                    const parsed = JSON.parse(data);
+                                    const delta = parsed.choices[0]?.delta;
+                                    if (delta?.reasoning) {
+                                        message.reasoning = message.reasoning + delta.reasoning;
+                                    }
+                                    if (delta?.content) {
+                                        message.content = message.content + delta.content;
+                                    }
+                                    message.tokens = !isNaN(parsed.usage?.total_tokens) ? parsed.usage?.total_tokens : 0;
+                                    this.$forceUpdate();
+                                } catch (e) {
+                                    // Ignore invalid JSON
+                                    console.log(e);
+                                }
+                            }
+                        }
+                    }
+                    message.reasoning = '<i>' + message.reasoning + '</i>';
+                    this.$forceUpdate();
+                },
+                scrollToBottom() {
+                    const container = document.getElementById('conversation');
+                    container.scrollTop = container.scrollHeight;
+                },
+                setFreeModel() {
+                    this.model = 'deepseek/deepseek-r1-distill-llama-70b:free';
+                },
+                saveSetup() {
+                    const settings = {
+                        apiKey: this.apiKey,
+                        model: this.model,
+                        instructions: this.instructions,
+                        assistantName: this.assistantName,
+                        temperature: this.temperature,
+                        showThinking: this.showThinking
+                    };
+                    localStorage.setItem('settings', JSON.stringify(settings));
+                    Toastify({
+                        text: "Settings Saved.",
+                        duration: 1500
+                    }).showToast();
+                },
+                loadSetup() {
+                    try {
+                        const settings = JSON.parse(localStorage.getItem('settings'));
+                        this.apiKey = settings?.apiKey || '';
+                        this.model = settings?.model || '';
+                        this.instructions = settings?.instructions || 'You are a helpful assistant for the user.';
+                        this.assistantName = settings?.assistantName || 'Assistant';
+                        this.temperature = settings?.temperature || 0.7;
+                        this.showThinking = settings?.showThinking !== undefined ? settings.showThinking : true;
+                    } catch (e) {
+
+                    }
+                }
+            },
+            mounted() {
+                this.loadSetup();
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>
