@@ -6,17 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client-side AI Chat</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github-dark.min.css" />
     <style>
         body {
-            background-color: #1a1a1a;
+            background-color: #121212;
             color: #ffffff;
         }
 
         .chat-container {
             overflow: hidden;
-            border: 1px solid #333;
+            border: 1px solid #495057;
             border-radius: 8px;
             padding: 10px;
             margin-bottom: 20px;
@@ -30,13 +32,15 @@
         }
 
         .user-message {
-            background-color: #007bff;
+            background-color: #0d6efd;
             margin-left: 20%;
+            border: 1px solid #495057;
         }
 
         .assistant-message {
-            background-color: #333;
+            background-color: #2d3436;
             margin-right: 20%;
+            border: 1px solid #495057;
         }
 
         .input-group textarea {
@@ -45,37 +49,101 @@
         }
 
         pre {
-            background-color: #2d2d2d;
+            background-color: #1e1e1e;
             padding: 10px;
             border-radius: 4px;
             overflow-x: auto;
+            border: 1px solid #495057;
         }
 
         code {
-            background-color: #2d2d2d;
+            background-color: #1e1e1e;
             padding: 2px 4px;
             border-radius: 4px;
+            color: #e9ecef;
         }
     </style>
 </head>
 
 <body>
     <div id="app" class="container mt-4">
-        <h1 class="text-center mb-4">AI Chat Interface</h1>
+        <h1 class="text-center mb-4 text-white">AI Chat Interface</h1>
 
         <!-- Setup Section -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Setup</h5>
+        <div class="card mb-4 bg-dark border-secondary">
+            <div class="card-header bg-dark border-secondary">
+                <h5 class="mb-3 text-white">Setup - Settings</h5>
+
+                <!-- Privacy Notice -->
+                <div class="alert alert-dark border-secondary mb-3">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-shield-check text-info me-2 mt-1"></i>
+                        <div>
+                            <h6 class="alert-heading text-white mb-2">Privacy Notice</h6>
+                            <div class="list-group mb-2">
+                                <div class="list-group-item list-group-item-success text-light border-secondary">
+                                    <strong class="text-light">Local Storage:</strong> Your settings are securely stored
+                                    locally in your browser's storage.
+                                    You can verify this by reviewing the source code.
+                                </div>
+                                <div class="list-group-item list-group-item-success text-light border-secondary">
+                                    <strong class="text-light">No Server Access:</strong> We do not retain or access
+                                    your
+                                    settings as this page is hosted on GitHub Pages with no back-end servers.
+                                </div>
+                                <div class="list-group-item list-group-item-warning text-light border-secondary">
+                                    <strong class="text-light">API Usage:</strong> Settings are exclusively used for API
+                                    requests to OpenRouter and are subject to
+                                    OpenRouter's privacy policy as well as the policies of respective AI model
+                                    providers.
+                                </div>
+                                <div class="list-group-item list-group-item-danger text-light border-secondary">
+                                    <strong class="text-light">Official Source:</strong> The authoritative version is
+                                    hosted
+                                    at
+                                    <a href="https://xiaolintangyuan.github.io/portfolio-demo/game" target="_blank"
+                                        class="text-info">
+                                        https://xiaolintangyuan.github.io/portfolio-demo/game
+                                    </a>
+                                    <div class="text-warning small">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        <strong>Security Warning:</strong> Usage from any other location is not
+                                        endorsed, and we
+                                        cannot guarantee its integrity or security.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terms Agreement -->
+                <div class="text-center">
+                    <small class="text-muted">
+                        <i class="bi bi-check-circle text-success me-1"></i>
+                        By using this service, you implicitly agree with the above terms.
+                    </small>
+                </div>
             </div>
             <div class="card-body">
                 <div class="mb-3">
-                    <label for="apiKey" class="form-label">Open Router API Key</label>
-                    <input type="password" class="form-control" id="apiKey" v-model="apiKey"
-                        placeholder="Enter your API key">
+                    <label for="baseURL" class="form-label text-white">Base URL</label>
+                    <small class="text-muted d-block mt-1 mb-2">The Base URL should have a compatible
+                        <code>/chat/completions</code>
+                        endpoint.</small>
+                    <input type="text" class="form-control" id="baseURL" v-model="baseURL"
+                        placeholder="https://openrouter.ai/api/v1" />
                 </div>
                 <div class="mb-3">
-                    <label for="model" class="form-label">Model Reference</label>
+                    <label for="apiKey" class="form-label text-white">OpenRouter API Key</label>
+                    <small class="text-muted d-block mt-1 mb-2">You are using your own OpenRouter API key to access the
+                        AI models.
+                        <strong>Please moderate your own content</strong>.</small>
+                    <input type="password" class="form-control" id="apiKey" v-model="apiKey"
+                        placeholder="Enter your API key (e.g. sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxx)" />
+                </div>
+                <div class="mb-3">
+                    <label for="model" class="form-label text-white">Model Reference</label>
                     <div class="input-group">
                         <input type="text" class="form-control" id="model" v-model="model" list="availableModels"
                             placeholder="e.g. deepseek/deepseek-r1-distill-llama-70b:free" />
@@ -94,25 +162,25 @@
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="showThinking"
                                     v-model="showThinking">
-                                <label class="form-check-label" for="showThinking">
+                                <label class="form-check-label text-white" for="showThinking">
                                     Show Thinking
                                 </label>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <label for="temperature" class="form-label">Temperature</label>
+                            <label for="temperature" class="form-label text-white">Temperature</label>
                             <input type="number" class="form-control" id="temperature" v-model.number="temperature"
                                 min="0" max="2" step="0.1">
                         </div>
                         <div class="col-md-4">
-                            <label for="assistantNameInput" class="form-label">Assistant Name</label>
+                            <label for="assistantNameInput" class="form-label text-white">Assistant Name</label>
                             <input type="text" class="form-control" id="assistantNameInput" v-model="assistantName"
                                 placeholder="Assistant">
                         </div>
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label for="instructions" class="form-label">Instructions (System Prompt)</label>
+                    <label for="instructions" class="form-label text-white">Instructions (System Prompt)</label>
                     <textarea class="form-control" id="instructions" v-model="instructions" rows="3"
                         placeholder="Enter system instructions"></textarea>
                 </div>
@@ -125,7 +193,7 @@
         </div>
 
         <!-- Conversation Section -->
-        <div class="chat-container" id="conversation">
+        <div class="chat-container bg-dark border-secondary" id="conversation">
             <div v-for="(message, index) in messages" :key="index"
                 :class="['message', message.role === 'user' ? 'user-message' : 'assistant-message']">
                 <div class="mb-2">
@@ -141,9 +209,9 @@
                     </button>
                 </div>
                 <div v-if="message.reasoning && message.reasoning != '' && message.showReasoning"
-                    class="alert alert-success mb-2">
-                    <div class="fw-bold fst-italic">Thinking:</div>
-                    <div v-html="message.reasoning"></div>
+                    class="alert alert-dark border-success mb-2">
+                    <div class="fw-bold fst-italic text-success">Thinking:</div>
+                    <div v-html="message.reasoning" class="text-light"></div>
                 </div>
                 <div class="mb-2" v-html="message.content"></div>
                 <div class="mb-2">
@@ -170,7 +238,22 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/languages/go.min.js"></script>
     <script>
+        const md = window.markdownit({
+            highlight: function (str, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    try {
+                        return hljs.highlight(str, { language: lang }).value;
+                    } catch (err) {
+                        console.log(err);
+                    }
+                }
+                return ''; // use external default escaping
+            }
+        });
         const { createApp } = Vue;
         const availableModels = [
             "deepseek/deepseek-chat-v3.1:free",
@@ -215,6 +298,7 @@
                     assistantName: 'Assistant',
                     apiKey: '',
                     model: '',
+                    baseURL: 'https://openrouter.ai/api/v1',
                     instructions: 'You are a helpful assistant for the user.',
                     messages: [],
                     userInput: '',
@@ -229,6 +313,9 @@
                 }
             },
             methods: {
+                formatMarkdownContent(content) {
+                    return md.render(content);
+                },
                 autoExpand(event) {
                     const textarea = event.target;
                     textarea.style.height = 'auto';
@@ -259,16 +346,19 @@
 
                     try {
                         await this.callOpenRouterAPI(assistantMessage);
+                        assistantMessage.content = this.formatMarkdownContent(assistantMessage.content);
                         this.$nextTick(() => {
                             this.scrollToBottom();
                         });
                     } catch (error) {
                         console.error('Error:', error);
                         assistantMessage.content = 'Sorry, there was an error processing your request.';
+                    } finally {
+                        this.$forceUpdate();
                     }
                 },
                 async callOpenRouterAPI(message) {
-                    const url = 'https://openrouter.ai/api/v1/chat/completions';
+                    const url = this.baseURL + '/chat/completions';
                     const headers = {
                         'Authorization': `Bearer ${this.apiKey}`,
                         'Content-Type': 'application/json',
@@ -278,7 +368,7 @@
                     const body = {
                         model: this.model,
                         messages: [
-                            { role: 'system', content: this.instructions + '\n<IMPORTANT>DO NOT USE MARKDOWN. Your output displays on a webpage so adjust accordingly.</IMPORTANT>' },
+                            { role: 'system', content: this.instructions },
                             ...this.messages.slice(-11, -1) // Keep last 10 messages for context, exclude the current assistant message
                         ],
                         stream: true,
@@ -297,10 +387,9 @@
 
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
-
                     while (true) {
                         const { done, value } = await reader.read();
-                        if (done) break;
+                        if (done) { break; }
                         const chunk = decoder.decode(value);
                         const lines = chunk.split('\n');
                         for (const line of lines) {
@@ -325,8 +414,6 @@
                             }
                         }
                     }
-                    message.reasoning = '<i>' + message.reasoning + '</i>';
-                    this.$forceUpdate();
                 },
                 scrollToBottom() {
                     const container = document.getElementById('conversation');
@@ -339,6 +426,7 @@
                     const settings = {
                         apiKey: this.apiKey,
                         model: this.model,
+                        baseURL: this.baseURL,
                         instructions: this.instructions,
                         assistantName: this.assistantName,
                         temperature: this.temperature,
@@ -355,6 +443,7 @@
                         const settings = JSON.parse(localStorage.getItem('settings'));
                         this.apiKey = settings?.apiKey || '';
                         this.model = settings?.model || '';
+                        this.baseURL = settings?.baseURL || 'https://openrouter.ai/api/v1';
                         this.instructions = settings?.instructions || 'You are a helpful assistant for the user.';
                         this.assistantName = settings?.assistantName || 'Assistant';
                         this.temperature = settings?.temperature || 0.7;
