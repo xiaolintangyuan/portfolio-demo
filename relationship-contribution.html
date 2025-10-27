@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relationship Dynamics Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #4a69bd 0%, #6a89cc 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f5f6fa;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f8b500 0%, #feca57 100%);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .question-number {
+            color: #5f6f70;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            color: #2c3e50;
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            line-height: 1.4;
+            flex-grow: 1;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            background: #f5f6fa;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option:hover {
+            background: #dfe4ea;
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            background: #c7ecee;
+            border-color: #0fbcf9;
+        }
+
+        .option-radio {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #b2bec3;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .option.selected .option-radio {
+            border-color: #0fbcf9;
+        }
+
+        .option-radio::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #0fbcf9;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .option.selected .option-radio::after {
+            opacity: 1;
+        }
+
+        .option-text {
+            color: #2c3e50;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+        }
+
+        button {
+            flex: 1;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-back {
+            background: #dfe4ea;
+            color: #2c3e50;
+        }
+
+        .btn-back:hover:not(:disabled) {
+            background: #b2bec3;
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, #f8b500 0%, #feca57 100%);
+            color: white;
+        }
+
+        .btn-next:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(248, 181, 0, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .intro {
+            text-align: center;
+        }
+
+        .intro h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .intro p {
+            color: #636e72;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #0fbcf9 0%, #4a69bd 100%);
+            color: white;
+            padding: 18px 40px;
+            width: 100%;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(15, 188, 249, 0.4);
+        }
+
+        .result {
+            text-align: center;
+        }
+
+        .result-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .result h2 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .result-score {
+            color: #0fbcf9;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .result-message {
+            color: #636e72;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .btn-restart {
+            background: linear-gradient(135deg, #0fbcf9 0%, #4a69bd 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-restart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(15, 188, 249, 0.4);
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 30px 20px;
+            }
+
+            .question-text {
+                font-size: 20px;
+            }
+
+            .intro h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card" id="card">
+            <div class="intro" id="intro">
+                <h1>💑 Relationship Dynamics Quiz</h1>
+                <p style="text-align: left;">Discover how you and your partner contribute to your relationship. Answer
+                    these questions honestly, rating on a scale of either You or Your Partner in the situation.</p>
+                <p style="text-align: left;">Disclaimer: This is just a lifestyle quiz, do not take it too seriously!
+                </p>
+                <button class="btn-start" onclick="startQuiz()">Start Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            "Who often listens to and values the other partner's opinions during discussions?",
+            "Who is more likely to respect the other partner's personal boundaries?",
+            "Who has taken on a larger share of the household chores?",
+            "Who contributes more to financial decisions or planning?",
+            "Who tends to initiate discussions about dividing responsibilities fairly?",
+            "Who provides more emotional comfort during tough times?",
+            "Who tends to initiate physical intimacy?",
+            "Who gives in more during a negotiation?",
+            "Who appeases the other partner after an argument?",
+            "Who tends to start the conversation for the other to share their feelings after an argument?",
+            "Who encourages the other partner to pursue their personal goals or ambitions more?",
+            "Who stays calm and solution-focused during disagreements?",
+            "Who takes the lead in resolving conflicts constructively?",
+            "Who is more consistent in keeping promises or commitments?",
+            "Who is more dependable in handling responsibilities?",
+            "Who takes the lead in aligning decisions with shared values?",
+            "Who initiates discussions about long-term goals or priorities?",
+            "Who expresses gratitude for the other's efforts more often?",
+            "Who acknowledges the other partner's contributions to the relationship more?",
+            "Who adjusts more readily to life changes for the sake of the relationship? (e.g. pausing migration plans for their partner)",
+            "Who is more flexible in adapting roles when circumstances change? (e.g. taking up childcare responsibilities when partner wants to work)"
+        ];
+
+        const options = [
+            { value: 1, label: 'You' },
+            { value: 2, label: 'Likely You' },
+            { value: 3, label: 'Both' },
+            { value: 4, label: 'Likely Your Partner' },
+            { value: 5, label: 'Your Partner' },
+        ];
+
+        let currentQuestion = 0;
+        let answers = {};
+
+        function startQuiz() {
+            document.getElementById('intro').style.display = 'none';
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const card = document.getElementById('card');
+            const progress = ((currentQuestion) / questions.length) * 100;
+
+            card.innerHTML = `
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${progress}%"></div>
+                </div>
+                <div class="question-number">Question ${currentQuestion + 1} of ${questions.length}</div>
+                <div class="question-text">${questions[currentQuestion]}</div>
+                <div class="options">
+                    ${options.map((option) => `
+                        <div class="option ${answers[currentQuestion] === option.value ? 'selected' : ''}" onclick="selectOption(${option.value})">
+                            <div class="option-radio"></div>
+                            <div class="option-text">${option.label}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="buttons">
+                    <button class="btn-back" onclick="previousQuestion()" ${currentQuestion === 0 ? 'disabled' : ''}>Back</button>
+                    <button class="btn-next" onclick="nextQuestion()" ${answers[currentQuestion] === undefined ? 'disabled' : ''}>
+                        ${currentQuestion === questions.length - 1 ? 'Finish' : 'Next'}
+                    </button>
+                </div>
+            `;
+        }
+
+        function selectOption(value) {
+            answers[currentQuestion] = value;
+            showQuestion();
+        }
+
+        function nextQuestion() {
+            if (answers[currentQuestion] === undefined) return;
+
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion();
+            }
+        }
+
+        function showResults() {
+            const totalScore = Object.values(answers).reduce((sum, val) => sum + val, 0);
+            const midpoint = 63;
+            const delta = 5;
+
+            let resultIcon, resultTitle, resultMessage;
+
+            if (totalScore < (midpoint - delta)) {
+                resultIcon = '🫵';
+                resultTitle = 'You contribute more';
+                resultMessage = 'Based on your responses, You appears to contribute more to the relationship!';
+            } else if (totalScore > (midpoint + delta)) {
+                resultIcon = '💑';
+                resultTitle = 'Your partner contribute more';
+                resultMessage = 'Based on your responses, Your Partner appears to contribute more to the relationship!';
+            } else {
+                resultIcon = '⚖️';
+                resultTitle = 'Both of you are in sync!';
+                resultMessage = 'Congratulations! Based on your responses, both of you contribute equally to the relationship!';
+            }
+
+            const card = document.getElementById('card');
+            card.innerHTML = `
+                <div class="result">
+                    <div class="result-icon">${resultIcon}</div>
+                    <h2>${resultTitle}</h2>
+                    <div class="result-message">${resultMessage}</div>
+                    <button class="btn-restart" onclick="restartQuiz()">Take Quiz Again</button>
+                </div>
+            `;
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            answers = {};
+            const card = document.getElementById('card');
+            card.innerHTML = `
+                <div class="intro" id="intro">
+                    <h1>💑 Relationship Dynamics Quiz</h1>
+                    <p style="text-align: left;">Discover how you and your partner contribute to your relationship. Answer these questions honestly, rating on a scale of either You or Your Partner in the situation.</p>
+                    <p style="text-align: left;">Disclaimer: This is just a lifestyle quiz, do not take it too seriously!</p>
+                    <button class="btn-start" onclick="startQuiz()">Start Quiz</button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+
+</html>
